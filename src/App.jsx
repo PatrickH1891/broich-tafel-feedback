@@ -75,20 +75,38 @@ export default function App() {
   };
 
   const analyzePhoto = async () => {
-    if (!photo) return;
+  if (!photo) return;
 
-    setAnalyzing(true);
+  setAnalyzing(true);
 
-    // Dummy KI (alle 👍)
-    await new Promise((r) => setTimeout(r, 800));
+  const reader = new FileReader();
+  reader.readAsDataURL(photo);
 
-    setRatings({
-      Montag: "up",
-      Dienstag: "up",
-      Mittwoch: "up",
-      Donnerstag: "up",
-      Freitag: "up",
-    });
+  reader.onload = async () => {
+    const base64Image = reader.result;
+
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: base64Image,
+        }),
+      });
+
+      const data = await response.json();
+
+      setRatings(data);
+      setStep("review");
+    } catch (error) {
+      alert("Fehler bei der Auswertung");
+    }
+
+    setAnalyzing(false);
+  };
+};
 
     setAnalyzing(false);
     setStep("review");
